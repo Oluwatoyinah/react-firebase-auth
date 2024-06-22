@@ -1,3 +1,4 @@
+import { onAuthStateChanged } from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
 
 const AuthContext = createContext({});
@@ -6,6 +7,28 @@ export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState(() => {
     return JSON.parse(localStorage.getItem("user_auth")) || {};
   });
+
+  const [actionStatus, setActionStatus] = useState({
+    isLoggedIn: false,
+    isLoading: true,
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, initializeUser);
+    return unsubscribe;
+  }, []);
+
+  async function initializeUser() {
+    if (user) {
+      setAuth({ ...user });
+      setActionStatus({ ...actionStatus, isLoggedIn: true });
+    } else {
+      setAuth({});
+      setActionStatus({ ...actionStatus, isLoggedIn: false });
+    }
+
+    setActionStatus({ ...actionStatus, isLoading: false });
+  }
 
   useEffect(() => {
     localStorage.setItem("user_auth", JSON.stringify(auth));
